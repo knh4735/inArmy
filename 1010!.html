@@ -1,0 +1,250 @@
+<!DOCTYPE html> 
+<html>
+<head>
+	<meta charset='utf-8'>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<style>
+		#con {width:800px;}
+		
+		#panT {margin: 40px; margin-bottom:0px; border:none; float:left;}
+		#pan td {width:40px; height:40px; background-color:#dddddd; border:none; border-radius:5px;}
+		
+		div#list {margin-top:30px; height:400px; width: 150px; float: left;}
+		#list div.list {height:150px; padding-left:16px;}
+		#list table {display:table-cell; padding-top:40%;}
+
+		#score {text:bold; float:right; width:200px;}
+
+		#item {display:none;}
+		.item td {width:25px; height:25px; border:none; border-radius:5px;}
+		.cell1 td {background-color : #3333cc;}	.cell2 td {background-color : #e8e800;} .cell3 td {background-color : #0096e6;}
+		.cell4 td {background-color : #00e600;} .cell5 td {background-color : #ee0000;} .cell9 td {background-color : #00ffff;}
+ 		td.empty {opacity:0;}
+	</style>
+
+	<script>
+		var blDat = [[{r:0,c:0}],[{r:0,c:0},{r:0,c:1}], [{r:0,c:0},{r:1,c:0}],[{r:0,c:0},{r:0,c:1},{r:0,c:2}], [{r:0,c:0},{r:1,c:0},{r:2,c:0}], [{r:0,c:0},{r:1,c:0},{r:1,c:-1}], [{r:0,c:0},{r:1,c:0},{r:1,c:1}], [{r:0,c:0},{r:0,c:1},{r:1,c:1}], [{r:0,c:0},{r:0,c:1},{r:1,c:0}],[{r:0,c:0},{r:0,c:1},{r:1,c:0},{r:1,c:1}], [{r:0,c:0},{r:0,c:1},{r:0,c:2},{r:0,c:3}], [{r:0,c:0},{r:1,c:0},{r:2,c:0},{r:3,c:0}],[{r:0,c:0},{r:0,c:1},{r:0,c:2},{r:0,c:3},{r:0,c:4}], [{r:0,c:0},{r:1,c:0},{r:2,c:0},{r:3,c:0},{r:4,c:0}],[{r:0,c:0},{r:0,c:1},{r:0,c:2},{r:1,c:0},{r:2,c:0}], [{r:0,c:0},{r:0,c:1},{r:0,c:2},{r:1,c:2},{r:2,c:2}],[{r:0,c:0},{r:1,c:0},{r:2,c:0},{r:2,c:-1},{r:2,c:-2}], [{r:0,c:0},{r:1,c:0},{r:2,c:0},{r:2,c:1},{r:2,c:2}],[{r:0,c:0},{r:0,c:1},{r:0,c:2},{r:1,c:0},{r:1,c:1},{r:1,c:2},{r:2,c:0},{r:2,c:1},{r:2,c:2}]];
+		var cStat = {blockNo:-1, listNo:-1};	//현재 선택한 블럭 종류
+		var score = 0;
+
+		//좌표로 셀 지정
+		function cellOffset(r,c){return $("#panT td[r="+r+"][c="+c+"]");}
+
+		//블럭의 배경색 가져오기
+		function getColor(no){return $("#item table[typeno='"+no+"'] td").css("background-color");}
+
+		//끝
+		function end(){
+			alert("겨우? ㅎ\n"+score+"점");
+
+			location.reload(true);
+
+		}
+		
+		//줄 삭제
+		function clearLine(){
+			var	pan = $("#panT")
+				rows = new Array(),
+				cols = new Array();
+
+			for(var c=0; c<10; c++){
+				var flag = true;
+				for(var r=0;r<10; r++){
+					if(!cellOffset(r,c).hasClass("filled")){
+						flag = false;
+						break;
+					}
+				}
+				if(flag) cols.push(c);
+			}
+
+			for(var r=0;r<10; r++){
+				var flag = true;
+				for(var c=0;c<10; c++){
+					if(!cellOffset(r,c).hasClass("filled")){
+						flag = false;
+						break;
+					}
+				}
+				if(flag) rows.push(r);
+			}
+
+			for(var r=0; r<rows.length; r++) for(var c=0; c<10; c++) cellOffset(rows[r], c).removeClass("filled").css("background-color", "#dddddd");
+			
+			for(var c=0; c<cols.length; c++) for(var r=0; r<10; r++) cellOffset(r, cols[c]).removeClass("filled").css("background-color", "#dddddd");
+
+			score += (rows.length + cols.length) * (rows.length + cols.length + 1) * 5
+		}
+
+		//판 생성
+		function makePan(){
+			var 	pan = document.getElementById('pan'),
+				html = "";
+
+			for(var i=0;i<10;i++){
+				html += "<tr>";
+				for(var j=0;j<10;j++){
+					html += "<td class='r" + i + " c" + j + "' r='"+i+"' c='"+j+"' ></td>";
+				}
+				html += "</tr>";
+			}
+	
+			pan.innerHTML = html;
+			
+			$("#score").text(score+"점");
+		}
+
+		//새로운 리스트 뽑기
+		function newList(){
+			var	list = $(".list"),
+				item = $("#item").children(),
+				bal = [0, 0, 1, 2, 3, 3, 4, 4, 5, 6, 7, 8, 9, 9, 10, 10, 11, 11, 12, 13, 14, 15, 16, 17, 18, 18];
+				ranNum = [bal[Math.floor(Math.random()*26)], bal[Math.floor(Math.random()*26)], bal[Math.floor(Math.random()*26)]];
+
+				list[0].innerHTML = item[ranNum[0]].outerHTML;
+				list[1].innerHTML = item[ranNum[1]].outerHTML;
+				list[2].innerHTML = item[ranNum[2]].outerHTML;
+	
+			checkSpace();
+		}
+
+		//공간 체크 
+		function checkSpace(){
+			var	curItems = $(".list table"),
+				typeNos = new Array();
+
+			curItems.each(function(){typeNos.push($(this).attr("typeno"));});
+
+			for(var i=0; i<typeNos.length; i++){
+				var block = blDat[typeNos[i]];
+				for(var c=0; c<10; c++){
+					for(var r=0; r<10; r++){
+						var flag = true;
+						for(var j=0; j< block.length; j++){
+							if(cellOffset(block[j].r + r, block[j].c + c).length == 0 || cellOffset(block[j].r + r, block[j].c + c).hasClass("filled")){
+								flag = false;
+								break;
+							}
+						}
+						if(flag) return;
+					}
+				}
+			}
+
+			end();
+			
+		}
+
+		
+		$(document).ready(function(){
+			makePan();
+			
+			newList();
+
+			//리스트 클릭 이벤트 함수 선언
+			$("#list .list").click(function(){
+				var	list = $(".list"),
+					selBlock = $(this).contents();
+				list.each(function(){$(this).contents().css("opacity",1)});
+				cStat.blockNo = selBlock.attr("typeNo");
+				cStat.listNo = $(this).attr("listNo");
+				selBlock.css("opacity",0.3);
+			});
+
+			//판에 마우스 올리면 표시
+			$("#panT td").mouseover(function(){
+				if(cStat.blockNo == -1) return;
+				if($(this).hasClass("filled")) return;
+
+				var	r = Number($(this).attr("r")),
+					c = Number($(this).attr("c")),
+					block = blDat[cStat.blockNo],
+					voidFlag = true;	//겹치면 false 아니면 true
+					
+				//해당 블럭의 형태가 들어갈 자리가 있는지 검사 voidFlag에 표시
+				for(var i=0; i < block.length; i++) if(cellOffset(block[i].r + r, block[i].c + c).length == 0 || cellOffset(block[i].r + r, block[i].c + c).hasClass("filled")) voidFlag = false;
+				
+				//들어갈 자리가 있는 경우 색을 바꿈
+				if(voidFlag) for(var i=0;i < block.length; i++) cellOffset(block[i].r + r, block[i].c + c).addClass("mover").css("background-color","#eeeeee");
+			});
+			
+			//마우스 옮기면 복구
+			$("#panT td").mouseout(function(){$("#panT td.mover").removeClass("mover").css("background-color","#dddddd");});
+
+			//클릭해서 블럭 넣기
+			$("#panT td").click(function(){
+				if($("#panT td.mover").length == 0) return;
+				$("#panT td.mover").addClass("filled").css("background-color",getColor(cStat.blockNo)).removeClass("mover");
+				$("#list .list[listno='"+cStat.listNo+"'] table").remove();	
+				score += blDat[cStat.blockNo].length;
+
+				cStat.blockNo = -1;
+				cStat.listNo = -1;
+
+				//꽉찬 줄 삭제
+				clearLine();
+
+				$("#score").text(score+"점");
+				
+				//3개 다 넣으면 재생성
+				if($("#list .list").children().length == 0) newList();
+
+				//나머지 블럭들로 공간 체크
+				checkSpace();
+				
+			});
+
+		});
+
+	</script>
+</head>
+<body>
+	<div id='con'>
+		<table id='panT'>
+			<tbody id='pan'>
+			</tbody>
+		</table>
+
+
+		<div id='list'>
+			<div class='list' id='l1' listNo='0'></div>
+			<div class='list' id='l2' listNo='1'></div>
+			<div class='list' id='l3' listNo='2'></div>
+		</div>
+		
+		<h1 id='score'></h1>
+	</div>
+
+	<div id='item'>
+<!--.-->	<table class='item cell1' id='item0' typeNo='0'><tr><td></td></tr></table>					
+		
+<!--..-->	<table class='item cell2' id='item1' typeNo='1'><tr><td></td><td></td></tr></table>					
+<!--:-->	<table class='item cell2' id='item2' typeNo='2'><tr><td></td></tr><tr><td></td></tr></table>				
+		
+<!--...-->	<table class='item cell3' id='item3' typeNo='3'><tr><td></td><td></td><td></td></tr></table>						
+<!--፧-->		<table class='item cell3' id='item4' typeNo='4'><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></table>				
+<!--.:-->	<table class='item cell3' id='item5' typeNo='5'><tr><td class='empty'></td><td></td></tr><tr><td></td><td></td></tr></table>		
+<!--:.-->	<table class='item cell3' id='item6' typeNo='6'><tr><td></td><td class='empty'></td></tr><tr><td></td><td></td></tr></table>		
+<!--':-->	<table class='item cell3' id='item7' typeNo='7'><tr><td></td><td></td></tr><tr><td class='empty'></td><td></td></tr></table>		
+<!--:'-->	<table class='item cell3' id='item8' typeNo='8'><tr><td></td><td></td></tr><tr><td></td><td class='empty'></td></tr></table>		
+
+<!--::-->	<table class='item cell4' id='item9' typeNo='9'><tr><td></td><td></td></tr><tr><td></td><td></td></tr></table>					
+<!--....-->	<table class='item cell4' id='item10' typeNo='10'><tr><td></td><td></td><td></td><td></td></tr></table>					
+<!--፤-->		<table class='item cell4' id='item11' typeNo='11'><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></table>	
+
+<!--.....-->	<table class='item cell5' id='item12' typeNo='12'><tr><td></td><td></td><td></td><td></td><td></td></tr></table>						
+<!--l-->	<table class='item cell5' id='item13' typeNo='13'><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr><tr><td></td></tr></table>	
+
+<!--፤''-->	<table class='item cell5' id='item14' typeNo='14'><tr><td></td><td></td><td></td></tr><tr><td></td><td class='empty'></td><td class='empty'></td></tr><tr><td></td><td class='empty'></td><td class='empty'></td></tr></table>						
+<!--''፤-->	<table class='item cell5' id='item15' typeNo='15'><tr><td></td><td></td><td></td></tr><tr><td class='empty'></td><td class='empty'></td><td></td></tr><tr><td class='empty'></td><td class='empty'></td><td></td></tr></table>	
+<!--..፤-->	<table class='item cell5' id='item16' typeNo='16'><tr><td class='empty'></td><td class='empty'></td><td></td></tr><tr><td class='empty'></td><td class='empty'></td><td></td></tr><tr><td></td><td></td><td></td></tr></table>						
+<!--፤..-->	<table class='item cell5' id='item17' typeNo='17'><tr><td></td><td class='empty'></td><td class='empty'></td></tr><tr><td></td><td class='empty'></td><td class='empty'></td></tr><tr><td></td><td></td><td></td></tr></table>	
+
+		<table class='item cell9' id='item18' typeNo='18'>
+<!-- ... -->		<tr><td></td><td></td><td></td></tr>	
+<!-- ... -->		<tr><td></td><td></td><td></td></tr>	
+<!-- ... -->		<tr><td></td><td></td><td></td></tr>	
+		</table>
+	</div>
+</body>
+</html>
