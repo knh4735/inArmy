@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title>카투사 전역일 계산기</title>
+	<style>
+		#title {margin:0 auto; margin-top:20px; font-size:30px; font-family:'굴림'; font-weight:bold; text-align:center;}
+
+		#con {padding:0 auto; margin:0 auto; width:300px; margin-top:30px;}
+		#con * {text-align:center; margin:0 auto; z-index:2; margin-bottom:10px;}
+
+		#con input {width:300px; height:50px; font-size:35px; margin-top:30px; margin-bottom:50px; border:none; border-radius: 20px; -webkit-box-shadow: 0px 0px 3px #000; box-shadow: 0px 0px 3px #000;}
+
+		#con .r {font-size:30px; font-family:'돋움';}
+		#t {margin-top:50px;}
+
+		.pieContainer {height:300px; opacity:0;}
+		#pieBackground {opacity:0; background-color: #eeeeee; position: absolute; width: 300px; height: 300px; border-radius: 150px;-webkit-box-shadow: 0px 0px 3px #000; box-shadow: 0px 0px 3px #000;}
+		.pie {position: absolute; width: 300px; height: 300px; -webkit-border-radius: 150px; border-radius: 150px; clip: rect(0px, 150px, 300px, 0px);}
+		.hold {position: absolute; width: 300px; height: 300px; -webkit-border-radius: 150px; border-radius: 150px; clip: rect(0px, 300px, 300px, 150px);}
+
+		#per {opacity:0; position:absolute; width: 210px; height: 210px; -webkit-border-radius: 105px; border-radius: 150px; margin-top:45px; margin-left:45px; line-height:210px; text-align:center;
+			z-index:10; color:#00bb00; font-size:50px; font-family:'돋움'; font-weight:bold; background-color:#ffffff; -webkit-box-shadow: inset 0px 0px 3px #000; box-shadow:inset 0px 0px 3px #000;}
+		#pieSlice .pie {background-color: #22ee22; transform:rotate(0deg);}
+		#pieSlice2 {transform:rotate(180deg);}
+		#pieSlice2 .pie {background-color: #22ee22; transform:rotate(0deg);}
+</style>
+
+
+	<script>
+		var interval, incPie;
+	
+		var msPS = 1000;
+		var msPM = msPS * 60;
+		var msPH = msPM * 60;
+		var msPD = msPH * 24;
+		var msPW = msPD * 7;
+		var totDate = 638;
+
+		function enter(event){
+			if(event.keyCode == 13) cal(event);
+		}
+
+		function cal(event){
+			clearInterval(interval);
+			clearInterval(incPie);
+
+			var i = document.getElementById('d').value;
+			var pie = document.getElementById('pieContainer');
+			var pieB = document.getElementById('pieBackground');
+			var pie1 = document.getElementById('pie1');
+			var pie2 = document.getElementById('pie2');
+			var restD = document.getElementById('restD');
+			var restT = document.getElementById('restT');
+			var per = document.getElementById('per');
+
+			pie.style.opacity = 1;
+			pieB.style.opacity = 1;
+			per.style.opacity = 1;
+
+			pie1.style.transform = "rotate(0deg)";
+			pie2.style.transform = "rotate(0deg)";
+
+			var yy = "20"+i.substr(0,2), mm = i.substr(2,2) - 1, dd = i.substr(4,2);
+			
+			var now = new Date();
+			var ip =new Date(yy,mm,dd,0);
+		console.log("입대"+ip);
+			var je = new Date(ip);
+			je.setMonth(ip.getMonth()+21,ip.getDate()-1);
+		console.log("제대"+je);
+
+			totDate = Math.floor((je - ip) / msPD);
+
+			var past = Math.floor((now-ip) / msPD);
+			var proceed = Math.floor((past / totDate)*1000)/10;
+			var proceedDeg = Math.floor(proceed * 360 / 100) ;
+
+			var remainD = totDate - past;
+			var r = "", t = "", rAlt = "";
+			var reW = Math.floor(remainD / 7);
+			var reD = remainD - reW * 7;
+
+			var now = new Date();
+			r = "";
+
+			var reT = je - now;// - (remainD - 1) * msPD;
+			var reH = Math.floor(reT / msPH);
+			var reM = Math.floor((reT - reH * msPH) / msPM);
+			var reS = Math.floor((reT - reH * msPH - reM * msPM) / msPS);
+			
+			r += "전역까지 " + remainD +"일 ㅎ<br>";
+			t += reH + " : " + reM + " : " + reS + " ㅋ";
+			
+			rAlt += reW + "주 "+ reD + "일";
+
+			restD.innerHTML = r;
+			restD.alt = rAlt;
+
+			restT.innerHTML = t;
+			per.innerHTML = proceed + "%";
+
+			var cnt = 0;
+
+			incPie = setInterval(function(){
+				
+				if(cnt > proceedDeg) clearInterval(incPie);
+
+				if(proceedDeg <= 180 && cnt <= proceedDeg) pie1.style.transform = "rotate(" + cnt + "deg)";
+
+				else if(proceedDeg > 180 && cnt <= 180) pie1.style.transform = "rotate(" + cnt + "deg)";
+
+				else if(proceedDeg > 180 && cnt > 180 && cnt <= 360) pie2.style.transform = "rotate(" + (cnt - 180) + "deg)";
+
+				cnt++;
+			}, 10);
+
+			
+			interval = setInterval(function(){
+					
+					var now = new Date();
+					t = "";
+
+					var reT = je - now;// - (remainD - 1) * msPD;
+					var reH = Math.floor(reT / msPH);
+					var reM = Math.floor((reT - reH * msPH) / msPM);
+					var reS = Math.floor((reT - reH * msPH - reM * msPM) / msPS);
+					
+					t += reH + " : " + reM + " : " + reS + " ㅋ";
+
+					restT.innerHTML = t;
+				}, 1000);
+		}
+	</script>
+</head>
+<body>
+	<div id='title'>국방부 시계</div>
+
+	<div id='con'>
+		<input type='text' onkeydown='enter(event)' id='d' name='d' placeholder='YYMMDD' title="입대일">
+		<div id='result'>
+			<div class="pieContainer" id="pieContainer" >
+     				<div id="pieBackground"></div>
+				<div id='per'></div>
+				<div id="pieSlice" class="hold"><div class="pie" id='pie1'></div></div>
+				<div id="pieSlice2" class="hold"><div class="pie" id='pie2'></div></div>
+			</div>
+			
+			<div id='t'>
+				<div class='r' id='restD'></div>
+				<div class='r' id='restT'></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
