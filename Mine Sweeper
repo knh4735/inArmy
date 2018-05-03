@@ -1,0 +1,139 @@
+<html><!--TODO 더블클릭-->
+<head>
+	<meta charset='utf-8'>
+	<style>
+		div#tool {float:right; width:500px;}
+		button {width:300px; height:100px; font-size:70px; margin:40px;}
+		span {font-size:70px; margin:40px;}
+
+		table#tab {border-spacing: 0; border-collapse: collapse; position:absolute;}
+		table#tab td {width:20px; height:23px; border:1px solid black; background-color:#dddddd; text-align:center; font-face:'돋움';}
+		table#tab td:hover {background-color:#eeeeee;}
+		table#tab td.boom {background-color:black;}
+		table#tab td.find {background-color:green;}
+		table#tab td.dig {background-color:#eeeeee;}
+
+	</style>
+	<script>
+		var tot = 0;
+
+		function dc(event){
+			console.log(1);
+		}
+
+		function c(event){
+			var t = event.target;
+			if(t.classList.contains('dig') || t.classList.contains('find')) return;
+			var val = t.getAttribute('val');
+			if(val === "mine") {
+				t.classList.add("boom");
+				var tr = document.getElementsByTagName('tr'), td, cnt;
+				for(i=0;i<tr.length;i++) {
+					td = tr[i].children;
+					for(j=0;j<td.length;j++){
+						if(td[j].getAttribute('val') === 'mine') td[j].classList.add("boom");
+					}
+				}
+				document.getElementById('tot').innerHTML = "Boooom!!!";
+			}
+			else {
+				t.classList.add("dig");
+				var value = t.getAttribute('count');
+				t.innerHTML = value>0?value:'';
+				if(value == 0){
+					var index = Number(t.getAttribute('index'));
+					var tr = t.parentElement;
+					if(tr.previousElementSibling){
+						var pre = t.parentElement.previousElementSibling;
+						if(pre.children[index-1]) pre.children[index-1].click();
+						if(pre.children[index]) pre.children[index].click();
+						if(pre.children[index+1]) pre.children[index+1].click();
+					}
+
+					if(tr.nextElementSibling){
+						var next = t.parentElement.nextElementSibling;
+						if(next.children[index-1]) next.children[index-1].click();
+						if(next.children[index]) next.children[index].click();
+						if(next.children[index+1]) next.children[index+1].click();
+					}
+					
+					if(tr.children[index-1]) tr.children[index-1].click();
+					if(tr.children[index+1]) tr.children[index+1].click();
+				}
+				
+			}
+		}
+
+		function find(event){
+			var t = event.target;
+			
+			if(t.getAttribute('val') === 'mine'){
+				if(t.classList.contains('find')) tot++;
+				else tot--;
+
+				if(tot <= 0) document.getElementById('tot').innerHTML = "Congratulation!!!";
+			}
+			t.classList.toggle("find");
+		}
+	</script>
+</head>
+<body oncontextmenu="return false;">
+	<div id='con'>
+		<table id='tab'>
+			<tbody id='t'>
+			</tbody>
+		</table>
+
+		<div id='tool'>
+			<button id='reset' value='reset' onclick='set()'>RESET</button>
+			<span id='tot'></span>
+		</div>
+	</div>
+
+	<script>
+	function set(){
+		var t = document.getElementById('t');
+		var a = ["mine", "normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal", "normal"];
+		var i, j, h="";
+
+		tot = 0;
+
+		for(i=0;i<20;i++){
+			h += "<tr>";
+			for(j=0;j<30;j++){
+				var n = Math.floor(Math.random()*6);
+				h+="<td val='"+a[n]+"' index='"+j+"' onclick='c(event)' ondoubleclick='dc(event)' oncontextmenu='find(event); event.preventDefault();'></td>";
+				if(n === 0) tot++;
+			}
+			h += "</tr>";
+		}
+		t.innerHTML = h;
+		document.getElementById('tot').innerHTML = "Total : "+tot;
+
+		var tr = document.getElementsByTagName('tr'), td, cnt;
+		for(i=0;i<tr.length;i++) {
+			td = tr[i].children;
+			for(j=0;j<td.length;j++){
+				cnt = 0;
+
+				if(tr[i-1]&&tr[i-1].children[j-1]&&tr[i-1].children[j-1].getAttribute('val')==='mine') cnt++;
+				if(tr[i-1]&&tr[i-1].children[j]&&tr[i-1].children[j].getAttribute('val')==='mine') cnt++;
+				if(tr[i-1]&&tr[i-1].children[j+1]&&tr[i-1].children[j+1].getAttribute('val')==='mine') cnt++;
+
+				if(tr[i]&&tr[i].children[j-1]&&tr[i].children[j-1].getAttribute('val')==='mine') cnt++;
+				if(tr[i]&&tr[i].children[j+1]&&tr[i].children[j+1].getAttribute('val')==='mine') cnt++;
+
+				if(tr[i+1]&&tr[i+1].children[j-1]&&tr[i+1].children[j-1].getAttribute('val')==='mine') cnt++;
+				if(tr[i+1]&&tr[i+1].children[j]&&tr[i+1].children[j].getAttribute('val')==='mine') cnt++;
+				if(tr[i+1]&&tr[i+1].children[j+1]&&tr[i+1].children[j+1].getAttribute('val')==='mine') cnt++;
+
+				td[j].setAttribute('count',cnt);
+			}
+				
+		}
+		
+	}
+	set();
+	</script>
+</body>
+</html>
