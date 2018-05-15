@@ -5,8 +5,6 @@
     <title>벽돌 깨기</title>
     <style>
     	* { padding: 0; margin: 0; }
-      body {font-family: "roboto", "Helvetica Neue", Helvetica, Arial, "맑은 고딕", malgun gothic, "돋움", Dotum, sans-serif;}
-		
 	div#scores {width: 450px; height: 50px; margin: 0 auto; font-size: 40px;}
 	div#score {width:200px; height: 50px; float:left; text-align: left;}
 	div#ballCnt {width:200px; height: 50px; float:right; text-align: right;}
@@ -210,27 +208,33 @@
 		
 
 		blocks.forEach(function(block, i){
-
 			// 옆에서 충돌
-			if(thisBall.y >= block.y && thisBall.y <= block.y + block.height && (thisBall.x < block.x || thisBall.x > block.x + block.width) && thisBall.x + thisBall.r >= block.x && thisBall.x - thisBall.r <= block.x + block.width){
-				thisBall.dx = -thisBall.dx;
-				thisBall.stat = 2;
+			if(thisBall.y >= block.y && thisBall.y <= block.y + block.height){
 
-				--block.c;
-				++Block.prototype.hitCnt;
-				block.chColor();
-				if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
+				if(thisBall.x + thisBall.r >= block.x && thisBall.x - thisBall.r <= block.x + block.width){
+					thisBall.dx = -thisBall.dx;
+					thisBall.stat = 2;
+
+					--block.c;
+					++Block.prototype.hitCnt;
+					block.chColor();
+					if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
+					//debugger;
+				}
 			}
 
 			//위아래 충돌
-			else if(thisBall.x >= block.x && thisBall.x <= block.x + block.width && (thisBall.y < block.y || thisBall.y > block.y + block.height) && thisBall.y + thisBall.r >= block.y && thisBall.y - thisBall.r <= block.y + block.height){
-				thisBall.dy = -thisBall.dy;
-				thisBall.stat = 2;
+			else if(thisBall.x >= block.x && thisBall.x <= block.x + block.width){
+				if(thisBall.y + thisBall.r >= block.y && thisBall.y - thisBall.r <= block.y + block.height){
+					thisBall.dy = -thisBall.dy;
+					thisBall.stat = 2;
 
-				--block.c;
-				++Block.prototype.hitCnt;
-				block.chColor();
-				if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
+					--block.c;
+					++Block.prototype.hitCnt;
+					block.chColor();
+					if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
+					//debugger;
+				}
 			}
 
 			//모서리 충돌
@@ -249,12 +253,13 @@
 					thisBall.dy = -tmp;
 				}
 
+				//debugger;
 				thisBall.stat = 2;
 				--block.c;
 				++Block.prototype.hitCnt;
 				block.chColor();
 				if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
-			}
+			}	
 		});
 
 		//아이템 먹기
