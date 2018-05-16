@@ -1,16 +1,16 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <title>벽돌 깨기</title>
-    <style>
-    	* { padding: 0; margin: 0; }
-	body {font-family: "roboto", "Helvetica Neue", Helvetica, Arial, "맑은 고딕", malgun gothic, "돋움", Dotum, sans-serif;}	
-	div#scores {width: 450px; height: 50px; margin: 0 auto; font-size: 40px;}
-	div#score {width:200px; height: 50px; float:left; text-align: left;}
-	div#ballCnt {width:200px; height: 50px; float:right; text-align: right;}
-    	canvas#pan {background: #ffffff; display: block; margin: 0 auto;  border:solid 1px black; }
-    </style>
+	<meta charset="utf-8" />
+	<title>벽돌 깨기</title>
+	<style>
+		* { padding: 0; margin: 0; }
+		body {font-family: "roboto", "Helvetica Neue", Helvetica, Arial, "맑은 고딕", malgun gothic, "돋움", Dotum, sans-serif;}
+		div#scores {width: 450px; height: 50px; margin: 0 auto; font-size: 40px;}
+		div#score {width:200px; height: 50px; float:left; text-align: left;}
+		div#ballCnt {width:200px; height: 50px; float:right; text-align: right;}
+		canvas#pan {background: #ffffff; display: block; margin: 0 auto; border:solid 1px black; }
+	</style>
 </head>
 <body>
 	<div id="scores">
@@ -18,10 +18,8 @@
 		<div id="ballCnt">공 : 1</div>
 	</div>
 	<canvas id="pan" width="450" height="450"></canvas>
-
 <script>
-	//TODO 모서리, 조준 
-
+	//TODO 모서리 충돌 판정 개선 필요 ㅠㅠ 투할ㄷ, 조준점 
 	var	canvas = document.getElementById("pan"),
 		ctx = canvas.getContext("2d");
 		w = canvas.width,
@@ -31,22 +29,22 @@
 		blocks = new Array(),
 		items = new Array(),
 		score = 1,
-		state = 0;	//ready : moving : waiting
+		state = 0; //ready : moving : waiting
 
-	var scores = {
+	var	scores = {
 		chScore : function(n){document.getElementById("score").innerText = "점수 : " + n;},
 		chBallCnt : function(n){document.getElementById("ballCnt").innerText = "공 : " + n;}
 	}
 
 	//블럭 객체 정의 - c : 카운트, x : 왼쪽부터 몇번째, y : 위에서 몇번째 줄
-	function Block(x){
+		function Block(x){
 		this.c = this.maxCnt;
-		this.x = x * this.width;
+		this.x = x * (this.width + 1) + 1;
 		this.y = this.height;
 		this.color = this.red;
 	}
 
-	Block.prototype.width = 75;
+	Block.prototype.width = 74;
 	Block.prototype.height = 50;
 	Block.prototype.red = "#ff2222";
 	Block.prototype.orng = "#ff8844";
@@ -58,12 +56,14 @@
 	//턴종료, 한 줄 아래로
 	Block.prototype.down = function(){
 		this.y += this.height;
+		this.chColor();
 		this.draw();
 	}
 
+
 	Block.prototype.chColor = function(){
-		if(this.c > 2.0 / 3 * this.maxCnt) this.color = this.red;
-		else if(this.c > 1.0 / 3 * this.maxCnt) this.color = this.orng;
+		if(this.c > 2.0 / 3 * Block.prototype.maxCnt) this.color = this.red;
+		else if(this.c > 1.0 / 3 * Block.prototype.maxCnt) this.color = this.orng;
 		else this.color = this.yellow;
 	}
 
@@ -85,15 +85,15 @@
 
 	//아이템 정의
 	function Item(n){
-		this.x = n * Block.prototype.width;
+		this.x = n * (Block.prototype.width + 1) + 0.5;
 		this.y = Block.prototype.height;
 		this.n = n;
 		this.arcX = this.x + Block.prototype.width / 2;
 		this.arcY = this.y + Block.prototype.height / 2;
 	}
 
-	Item.prototype.rs = 12;	//안쪽원 r
-	Item.prototype.rb = 18;	//바깥원 r
+	Item.prototype.rs = 12; //안쪽원 r
+	Item.prototype.rb = 18; //바깥원 r
 
 	Item.prototype.down = function(){
 		this.y += Block.prototype.height;
@@ -139,14 +139,14 @@
 		this.y = h - this.r;
 		this.dx = 0;
 		this.dy = 0;
-		this.stat = 0;	//0:바닥 , 1:움직이는 중, 2:한번이상 박음
+		this.stat = 0; //0:바닥 , 1:움직이는 중, 2:한번이상 박음
 	}
 
 	Ball.prototype.maxCnt = 1;
 	Ball.prototype.addCnt = 0;
 	Ball.prototype.flying = 0;
 	Ball.prototype.r = 9;
-	Ball.prototype.spd = 10;
+	Ball.prototype.spd = 3;
 	Ball.prototype.pos = w/2;
 	Ball.prototype.start = 0;
 
@@ -159,12 +159,16 @@
 		this.dx = 0;
 	}
 
+	Ball.prototype.checkAllfail = function(){
+		return !balls.some(ball => ball.stat == 2);
+	}
+
 	//다 떨어짐
 	Ball.prototype.end = function(){
 		interval = clearInterval(interval);
 		state = 0;
 
-		blocks.forEach(block =>	block.down());
+		blocks.forEach(block => block.down());
 		items.forEach(item => item.down());
 
 		blocks.some(function(block){
@@ -181,66 +185,60 @@
 		setNewLine();
 		Ball.prototype.maxCnt += Ball.prototype.addCnt;
 		Ball.prototype.addCnt = 0;
+
 		scores.chScore(++score);
 		scores.chBallCnt(Ball.prototype.maxCnt);
 	}
 
 	Ball.prototype.shoot = function(x, y){
-		var	a = x - this.x,
-			b = y - this.y,
-			c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
+		var a = x - this.x,
+		b = y - this.y,
+		c = Math.sqrt(Math.pow(a, 2) + Math.pow(b, 2));
 
 		this.dx = Ball.prototype.spd * a / c;
 		this.dy = Ball.prototype.spd * b / c;
 		this.stat = 1;
+
 		if(Ball.prototype.start == 0 && Ball.prototype.flying == 0) Ball.prototype.start = 1;
 		++Ball.prototype.flying;
 	}
 
 	Ball.prototype.move = function(){
 		if(this.stat == 0) return;
-		if(this.dx <= 0.0005 && this.dx >= 0) this.dx = 0.5;
-		else if(this.dx >= -0.0005 && this.dx < 0) this.dx = -0.5;
-		if(this.dy <= 0.0005 && this.dy >= 0) this.dy = 0.5;
-		else if(this.dy >= -0.0005 && this.dy < 0) this.dy = -0.5;
+		if(this.dy <= 0.5 && this.dy >= 0) this.dy = 0.5;
+		else if(this.dy >= -0.5 && this.dy < 0) this.dy = -0.5;
 
-		var	thisBall = this;
-
-		
+		var thisBall = this;
 
 		blocks.forEach(function(block, i){
 			// 옆에서 충돌
 			if(thisBall.y >= block.y && thisBall.y <= block.y + block.height){
-
-				if(thisBall.x + thisBall.r >= block.x && thisBall.x - thisBall.r <= block.x + block.width){
+				if((thisBall.x + thisBall.r >= block.x && thisBall.x < block.x && thisBall.dx > 0) || (thisBall.x - thisBall.r <= block.x + block.width && thisBall.x > block.x + block.width && thisBall.dx < 0)){
 					thisBall.dx = -thisBall.dx;
 					thisBall.stat = 2;
-
 					--block.c;
 					++Block.prototype.hitCnt;
 					block.chColor();
 					if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
-					//debugger;
 				}
 			}
 
 			//위아래 충돌
 			else if(thisBall.x >= block.x && thisBall.x <= block.x + block.width){
-				if(thisBall.y + thisBall.r >= block.y && thisBall.y - thisBall.r <= block.y + block.height){
+				if((thisBall.y + thisBall.r >= block.y && thisBall.y < block.y && thisBall.dy > 0) || (thisBall.y - thisBall.r <= block.y + block.height && thisBall.y > block.y + block.height && thisBall.dy < 0)){
 					thisBall.dy = -thisBall.dy;
 					thisBall.stat = 2;
-
 					--block.c;
 					++Block.prototype.hitCnt;
 					block.chColor();
 					if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
-					//debugger;
 				}
 			}
 
 			//모서리 충돌
 			else if(thisBall.y + thisBall.r > block.y && thisBall.y - thisBall.r < block.y + block.height && thisBall.x + thisBall.r > block.x && thisBall.x - thisBall.r < block.x + block.width){
-				//1사분면 or 3사분면	
+
+				//1사분면 or 3사분면
 				if((thisBall.y < block.y && thisBall.x > block.x + block.width) || (thisBall.y > block.y + block.height && thisBall.x < block.x)) {
 					var tmp = thisBall.dx;
 					thisBall.dx = thisBall.dy;
@@ -254,13 +252,12 @@
 					thisBall.dy = -tmp;
 				}
 
-				//debugger;
 				thisBall.stat = 2;
 				--block.c;
 				++Block.prototype.hitCnt;
 				block.chColor();
 				if(block.c == 0){blocks.splice(i, 1); ++Block.prototype.broken;}
-			}	
+			}
 		});
 
 		//아이템 먹기
@@ -273,7 +270,7 @@
 
 		//벽
 		if(thisBall.x + thisBall.r >= w || thisBall.x - thisBall.r <= 0) thisBall.dx = -thisBall.dx;
-		
+
 		//위아래
 		if(thisBall.y - thisBall.r <= 0) thisBall.dy = -thisBall.dy;
 		else if(thisBall.y + thisBall.r > w){
@@ -282,16 +279,16 @@
 				Ball.prototype.start = 0;
 				Ball.prototype.pos = thisBall.x;
 				while(Ball.prototype.pos >= w - thisBall.r) --Ball.prototype.pos;
-				while(Ball.prototype.pos <= thisBall.r) ++Ball.prototype.pos; 
+				while(Ball.prototype.pos <= thisBall.r) ++Ball.prototype.pos;
 			}
 
-			//그 최적화 : 한번도 안박은 공이 떨어짐 = 그 뒤 공들도 끗
-			/*if(this.stat == 1) {
+			//한번도 안박은 공이 떨어짐 = 그 뒤 공들도 끗
+			if(this.stat == 1 && Ball.prototype.checkAllfail()) {
 				balls.forEach(ball => ball.fall());
 				Ball.prototype.flying = 0;
 				Ball.prototype.end();
 				return;
-			}*/
+			}
 
 			thisBall.y = h - thisBall.r;
 			thisBall.x = Ball.prototype.pos;
@@ -300,6 +297,7 @@
 			thisBall.stat = 0;
 			--Ball.prototype.flying;
 		}
+
 		thisBall.x += thisBall.dx;
 		thisBall.y += thisBall.dy;
 
@@ -307,28 +305,22 @@
 		if(Ball.prototype.flying == 0) {
 			interval = clearInterval(interval);
 			state = 0;
-
-			blocks.forEach(block =>	block.down());
+			blocks.forEach(block => block.down());
 			items.forEach(item => item.down());
-	
 			blocks.some(function(block){
-				if(block.y >= h - Block.prototype.height){
-					end();
-					return true;
-				}
+			if(block.y >= h - Block.prototype.height){
+			end();
+			return true;
+			}
 			});
-
 			++Block.prototype.maxCnt;
-
 			for(var i = 0; i < Ball.prototype.addCnt; i++) addBall(Ball.prototype.pos);
-
 			setNewLine();
 			Ball.prototype.maxCnt += Ball.prototype.addCnt;
 			Ball.prototype.addCnt = 0;
 			scores.chScore(++score);
 			scores.chBallCnt(Ball.prototype.maxCnt);
 		}
-		
 	}
 
 	Ball.prototype.draw = function(){
@@ -338,7 +330,6 @@
 		ctx.fill();
 		ctx.closePath();
 	}
-
 
 	function Mouse(x, y){
 		this.x = x;
@@ -355,7 +346,18 @@
 		ctx.setLineDash([]);
 		ctx.closePath();
 	}
-	
+
+	//각도가 너무 낮지 않은지
+	Mouse.prototype.checkPos = function(a, b){
+		var x = a - balls[0].x,
+		y = b - balls[0].y;
+
+		const unitRatio = 1 / 18; // (height / (3 * width)) ^ 2;
+
+		if((y * y) / (x * x) < unitRatio) return false;
+		else return true;
+	}
+
 	Mouse.prototype.move = function(x, y){
 		this.x = x;
 		this.y = y;
@@ -368,31 +370,30 @@
 
 		//조준
 		canvas.addEventListener("mouseover", function(e){
-			if(state == 0 && interval == undefined) {
-				if(e.offsetY > 400) return;
-				mouse.move(e.offsetX, e.offsetY);
+			if(state == 0 && interval == undefined && mouse.checkPos(getEventX(e), getEventX(e))) {
+				mouse.move(getEventX(e), getEventY(e));
+
 				interval = setInterval(function(){
 					ctx.clearRect(0, 0, w, h);
 					balls[0].draw();
 					items.forEach(item => item.draw());
 					blocks.forEach(block => block.draw());
-	
 					mouse.draw();
 				}, 10);
 			}
 		});
 
 		canvas.addEventListener("mousemove", function(e){
-			if(state == 0 && e.offsetY <= 400){
-				if(interval != undefined) mouse.move(e.offsetX, e.offsetY);
+			if(state == 0 && mouse.checkPos(getEventX(e), getEventY(e))){
+				if(interval != undefined) mouse.move(getEventX(e), getEventY(e));
+
 				else {
-					mouse.move(e.offsetX, e.offsetY);
+					mouse.move(getEventX(e), getEventY(e));
 					interval = setInterval(function(){
 						ctx.clearRect(0, 0, w, h);
 						balls[0].draw();
 						items.forEach(item => item.draw());
 						blocks.forEach(block => block.draw());
-	
 						mouse.draw();
 					}, 10);
 				}
@@ -405,29 +406,62 @@
 
 		//발싸
 		canvas.addEventListener("click", function(e){
-			if(state == 0){
+			if(state == 0 && mouse.checkPos(getEventX(e), getEventY(e))){
 				state = 1;
 				interval = clearInterval(interval);
-
-				balls.forEach(function(ball, i){setTimeout(function(){ball.shoot(e.offsetX, e.offsetY);}, i * 75);});
-
-				interval = setInterval(function(){
+					balls.forEach(function(ball, i){setTimeout(function(){ball.shoot(getEventX(e), getEventY(e));}, i * 75);});
+					interval = setInterval(function(){
 					balls.forEach(ball => ball.move());
-
 					drawAll();
-				}, 21);
-				
+				}, 6);
 			}
 		});
 	}
 
+	function getEventX(event){
+		if (event.offsetX) return event.offsetX;
+
+		if (event.clientX) {
+			var	curElement = event.target,
+				left = curElement.offsetLeft;
+			
+			while(curElement.parentElement && curElement.parentElement.offsetLeft){
+				curElement = curElement.parentElement;
+				left += curElement.offsetLeft;
+			}
+
+			return event.clientX - left;
+		}
+
+		return null;
+	};
+
+	function getEventY(event){
+		if (event.offsetY) return event.offsetY;
+
+		if (event.clientY) {
+			var	curElement = event.target,
+				top = curElement.offsetTop;
+
+			while(curElement.parentElement && curElement.parentElement.offsetTop){
+				curElement = curElement.parentElement;
+				top += curElement.offsetTop;
+			}
+
+			return event.clientY - top; 
+		}
+
+		return null;
+	};
+
 	//새 블럭 뽑기 - n : 아이템 위치; 피해야 함
 	function addBlk(n){
 		var rn = new Array();
-		
+
 		//중복 없이, 아이템 위치 피해서 난수 배열 생성
 		for(var i = 0; i < 6; i++){
 			var r = Math.floor(Math.random() * 6);
+
 			if(rn.indexOf(r) == -1 && r != n) rn.push(r);
 		}
 
@@ -446,38 +480,44 @@
 		}
 	}
 
+	//아이템 생성 후 아이템 위치 반환
 	function addItem(){
-		var	r = Math.floor(Math.random() * 6),
-			i = new Item(r);
+		var r = Math.floor(Math.random() * 6),
+	
+		i = new Item(r);
 		items.push(i);
 
 		return r;
 	}
 
+	//공 생성
 	function addBall(){
 		var a = new Ball(Ball.prototype.pos+1);
 		balls.push(a);
 	}
 
+	//새로운 줄 생성
 	function setNewLine(){
 		var r = addItem();
+
 		items.forEach(item => item.draw());
 
 		addBlk(r);
+
 		blocks.forEach(block => block.draw());
 	}
 
+	//시작 판 생성
 	function makePan(){
 		addBall();
 		balls[0].draw();
-
 		setNewLine();
 	}
 
+	//모든 요소 그리기
 	function drawAll(){
 		ctx.clearRect(0, 0, w, h);
-		
-		balls.forEach(ball =>  ball.draw());
+		balls.forEach(ball => ball.draw());
 		items.forEach(item => item.draw());
 		blocks.forEach(block => block.draw());
 	}
@@ -485,14 +525,11 @@
 	//게임 끝
 	function end(){
 		alert(score + "점\n" + Block.prototype.broken + "개의 블럭을" + Block.prototype.hitCnt + "번 때려서 뿌셨습니다!");
-		
 		location.reload(true);
 	}
-
+	
 	setEvents();
-
 	makePan();
 </script>
-
 </body>
 </html>
