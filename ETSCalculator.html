@@ -32,6 +32,8 @@
 	<script>
 		var interval, incPie;
 	
+		var danchuks = [170103,170117,170131,170214,170228,170314,170328,170411,170425,170509,170523,170606,170620,170704,170718,170802,170815,170829,170912,170926,171010,171024,171107,171121,171205,171219,180102,180116,180130,180213,180227,180313,180327,180410,180424,180508,180522,180605,180619,180703,180717,180731,180814,180828,180911,180925,181009,181023,181106,181120,181204,181218,190102,190115,190129,190212,190226,190312,190326,190409,190423,190507,190521,190604,190618,190702,190716,190730,190813,190827,190910,190924,191008,191022,191105,191119,191203,191217,191231,200114,200128,200211,200225,200310,200324,200407,200421,200505,200519,200602];
+		
 		var msPS = 1000;
 		var msPM = msPS * 60;
 		var msPH = msPM * 60;
@@ -42,7 +44,12 @@
 		function enter(event){
 			if(event.keyCode == 13) cal(event);
 		}
-
+		function getDanchuk(ip){
+			for(var i = danchuks.length - 1; i >= 0; i--){
+				if(ip >= danchuks[i]) break;
+			}
+			return i + 1;
+		}
 		function cal(event){
 			clearInterval(interval);
 			clearInterval(incPie);
@@ -65,12 +72,16 @@
 
 			var yy = "20"+i.substr(0,2), mm = i.substr(2,2) - 1, dd = i.substr(4,2);
 			
+			var danchuk = getDanchuk(i);
+			console.log("단축일 " + danchuk);
+			
 			var now = new Date();
 			var ip =new Date(yy,mm,dd,0);
-		console.log("입대"+ip);
+			console.log("입대 "+ip);
+			
 			var je = new Date(ip);
-			je.setMonth(ip.getMonth()+21,ip.getDate()-1);
-		console.log("제대"+je);
+			je.setMonth(ip.getMonth()+21,ip.getDate() - danchuk - 1);
+			console.log("제대 "+je);
 
 			totDate = Math.floor((je - ip) / msPD);
 
